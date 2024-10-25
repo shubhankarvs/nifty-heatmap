@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 const NiftyHeatmap = () => {
+  // State management - keeping original structure
   const [data, setData] = useState(null);
   const [yearlyReturns, setYearlyReturns] = useState({});
   const [error, setError] = useState(null);
@@ -11,6 +14,7 @@ const NiftyHeatmap = () => {
   const [stats, setStats] = useState(null);
   const [showLegend, setShowLegend] = useState(false);
 
+  // Keep existing data fetching logic intact
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -18,7 +22,7 @@ const NiftyHeatmap = () => {
         const jsonData = JSON.parse(new TextDecoder().decode(response));
         setData(jsonData);
         
-        // Calculate yearly returns
+        // Calculate yearly returns - keeping your existing logic
         const yearlyData = {};
         Object.entries(jsonData).forEach(([year, months]) => {
           let yearValue = 100;
@@ -53,6 +57,7 @@ const NiftyHeatmap = () => {
     fetchData();
   }, []);
 
+  // Loading and error states
   if (isLoading) return (
     <div className="flex items-center justify-center h-screen">
       <div className="text-lg text-gray-600">Loading data...</div>
@@ -63,7 +68,6 @@ const NiftyHeatmap = () => {
     <div className="p-6 text-red-600">Error loading data: {error}</div>
   );
 
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const years = Object.keys(data).sort((a, b) => b - a);
   
   const filteredYears = yearFilter === 'all' ? years : years.filter(year => {
@@ -72,6 +76,7 @@ const NiftyHeatmap = () => {
     return true;
   });
 
+  // Keep your existing color logic
   const getColor = (value) => {
     if (value === undefined || value === null) return 'bg-gray-50';
     const numValue = parseFloat(value);
@@ -187,7 +192,7 @@ const NiftyHeatmap = () => {
             <thead>
               <tr>
                 <th className="sticky left-0 z-10 bg-gray-100 p-3 border-b font-semibold text-gray-700 text-sm">Year</th>
-                {months.map(month => (
+                {MONTHS.map(month => (
                   <th key={month} className="p-3 border-b bg-gray-100 font-semibold text-gray-700 text-sm w-16">
                     {month}
                   </th>
@@ -201,7 +206,7 @@ const NiftyHeatmap = () => {
               {filteredYears.map(year => (
                 <tr key={year}>
                   <td className="sticky left-0 z-10 bg-gray-100 p-3 border-b font-medium text-gray-700 text-sm">{year}</td>
-                  {months.map(month => {
+                  {MONTHS.map(month => {
                     const value = data[year]?.[month];
                     const isSignificant = isSignificantEvent(year, month);
                     return (
