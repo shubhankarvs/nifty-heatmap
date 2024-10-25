@@ -38,16 +38,18 @@ def fetch_nifty_data():
         # Convert Series to dictionary with year-month format
         returns_dict = {}
         
-        for date, value in monthly_returns.items():
-            # Skip NaN values using pandas.isna()
-            if not pd.isna(value):
-                year = str(date.year)
-                month = date.strftime('%b')
-                
-                if year not in returns_dict:
-                    returns_dict[year] = {}
-                
-                returns_dict[year][month] = round(float(value), 2)
+        # Convert to dataframe with date index
+        monthly_returns_clean = monthly_returns.dropna()
+        
+        for date in monthly_returns_clean.index:
+            value = monthly_returns_clean[date]
+            year = str(date.year)
+            month = date.strftime('%b')
+            
+            if year not in returns_dict:
+                returns_dict[year] = {}
+            
+            returns_dict[year][month] = round(float(value), 2)
         
         # Update existing data with new data
         for year in returns_dict:
@@ -75,6 +77,8 @@ def fetch_nifty_data():
             print(f"Maximum monthly return: {max(all_returns):.2f}%")
             print(f"Minimum monthly return: {min(all_returns):.2f}%")
             print(f"Average monthly return: {sum(all_returns)/len(all_returns):.2f}%")
+        
+        return True
         
     except Exception as e:
         print(f"Error updating data: {str(e)}")
