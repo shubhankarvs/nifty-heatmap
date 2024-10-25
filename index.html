@@ -1,97 +1,13 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2575.2">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
-  </style>
-</head>
-<body>
-<p class="p1">&lt;!DOCTYPE html&gt;</p>
-<p class="p1">&lt;html lang="en"&gt;</p>
-<p class="p1">&lt;head&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;Nifty Returns Heatmap&lt;/title&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"&gt;&lt;/script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"&gt;&lt;/script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"&gt;&lt;/script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.cell-green { background-color: #4ade80; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.cell-red { background-color: #f87171; }</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
-<p class="p1">&lt;/head&gt;</p>
-<p class="p1">&lt;body class="bg-gray-100 min-h-screen p-8"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="root" class="container mx-auto"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;script type="module"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const App = () =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const [data, setData] = React.useState({});</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>React.useEffect(() =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>fetch('data/nifty_returns.json')</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>.then(response =&gt; response.json())</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>.then(setData)</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>.catch(console.error);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}, []);</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>const getColor = (value) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>if (value === undefined) return 'bg-gray-100';</p>
-<p class="p1"><span class="Apple-converted-space">                </span>if (value &gt; 10) return 'bg-green-700 text-white';</p>
-<p class="p1"><span class="Apple-converted-space">                </span>if (value &gt; 5) return 'bg-green-500 text-white';</p>
-<p class="p1"><span class="Apple-converted-space">                </span>if (value &gt; 0) return 'bg-green-300';</p>
-<p class="p1"><span class="Apple-converted-space">                </span>if (value &gt; -5) return 'bg-red-300';</p>
-<p class="p1"><span class="Apple-converted-space">                </span>if (value &gt; -10) return 'bg-red-500 text-white';</p>
-<p class="p1"><span class="Apple-converted-space">                </span>return 'bg-red-700 text-white';</p>
-<p class="p1"><span class="Apple-converted-space">            </span>};</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const years = Object.keys(data).sort();</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>return (</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div className="bg-white rounded-lg shadow-lg p-6"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h1 className="text-2xl font-bold mb-6"&gt;Nifty Monthly Returns Heatmap (%)&lt;/h1&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div className="overflow-x-auto"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;table className="w-full border-collapse"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;th className="p-2 border"&gt;Year&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>{months.map(month =&gt; (</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;th key={month} className="p-2 border w-16"&gt;{month}&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>))}</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;tbody&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>{years.map(year =&gt; (</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;tr key={year}&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;td className="p-2 border font-medium"&gt;{year}&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>{months.map(month =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">                                            </span>const value = data[year]?.[month];</p>
-<p class="p1"><span class="Apple-converted-space">                                            </span>return (</p>
-<p class="p1"><span class="Apple-converted-space">                                                </span>&lt;td<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">                                                    </span>key={`${year}-${month}`}<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">                                                    </span>className={`p-2 border text-center ${getColor(value)}`}</p>
-<p class="p1"><span class="Apple-converted-space">                                                </span>&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                                    </span>{value !== undefined ? value.toFixed(2) : '-'}</p>
-<p class="p1"><span class="Apple-converted-space">                                                </span>&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                            </span>);</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>})}</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>))}</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/tbody&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/table&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>};</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>ReactDOM.render(React.createElement(App), document.getElementById('root'));</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
-<p class="p1">&lt;/body&gt;</p>
-<p class="p1">&lt;/html&gt;</p>
-</body>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + React</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

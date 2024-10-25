@@ -29,7 +29,7 @@ jobs:
           
       - name: Update data
         run: |
-          python nifty_data.py
+          python update_data.py
           
       - name: Verify data file
         run: |
