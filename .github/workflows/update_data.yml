@@ -51,6 +51,7 @@ jobs:
       - name: Install Node dependencies
         run: |
           npm install
+	  npm install tailwindcss-animate
           
       - name: Build project
         run: npm run build
