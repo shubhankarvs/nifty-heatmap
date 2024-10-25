@@ -7,88 +7,59 @@ const NiftyHeatmap = () => {
   const [hoveredCell, setHoveredCell] = useState(null);
   const [yearFilter, setYearFilter] = useState('all');
   const [stats, setStats] = useState(null);
-  const [debugInfo, setDebugInfo] = useState('');
 
   useEffect(() => {
-    async function fetchData() {
+    const loadData = async () => {
       try {
-        setDebugInfo(prev => prev + '\nAttempting to fetch data...');
+        const response = await window.fs.readFile('data/nifty_returns.json', { encoding: 'utf8' });
+        const jsonData = JSON.parse(response);
         
-        // Use the correct path to the data subdirectory
-        try {
-          const basePath = import.meta.env.BASE_URL || '/';
-          const jsonPath = `${basePath}data/nifty_returns.json`; // Updated path
-          setDebugInfo(prev => prev + `\nTrying to fetch from: ${jsonPath}`);
-          
-          const response = await fetch(jsonPath);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const jsonData = await response.json();
-          setData(jsonData);
-          setDebugInfo(prev => prev + '\nFetch successful!');
-          
-          // Calculate statistics
-          const allReturns = [];
-          Object.entries(jsonData).forEach(([year, months]) => {
-            Object.entries(months).forEach(([month, value]) => {
-              allReturns.push({ year, month, value });
-            });
+        // Calculate statistics
+        const allReturns = [];
+        Object.entries(jsonData).forEach(([year, months]) => {
+          Object.entries(months).forEach(([month, value]) => {
+            allReturns.push({ year, month, value });
           });
-          
-          const sortedReturns = allReturns.sort((a, b) => b.value - a.value);
-          setStats({
-            best: sortedReturns[0],
-            worst: sortedReturns[sortedReturns.length - 1],
-            average: (allReturns.reduce((sum, item) => sum + item.value, 0) / allReturns.length).toFixed(2)
-          });
-        } catch (fetchError) {
-          setDebugInfo(prev => prev + `\nFetch error: ${fetchError.message}`);
-          throw fetchError;
-        }
-      } catch (error) {
-        console.error('Error details:', error);
-        setError(error.message);
-        setDebugInfo(prev => prev + '\nFinal error: ' + error.message);
+        });
+        
+        const sortedReturns = allReturns.sort((a, b) => b.value - a.value);
+        setStats({
+          best: sortedReturns[0],
+          worst: sortedReturns[sortedReturns.length - 1],
+          average: (allReturns.reduce((sum, item) => sum + item.value, 0) / allReturns.length).toFixed(2)
+        });
+        
+        setData(jsonData);
+      } catch (err) {
+        console.error('Error loading data:', err);
+        setError(err.message);
       } finally {
         setIsLoading(false);
       }
-    }
+    };
 
-    fetchData();
+    loadData();
   }, []);
 
-  // Show loading state with debug info
-  if (isLoading) return (
-    <div className="flex items-center justify-center min-h-screen flex-col">
-      <div className="text-lg mb-4">Loading data...</div>
-      <pre className="text-sm text-gray-600 bg-gray-100 p-4 rounded max-w-2xl overflow-auto">
-        {debugInfo}
-      </pre>
-    </div>
-  );
-  
-  // Show error state with debug info and help text
-  if (error) return (
-    <div className="p-4">
-      <div className="text-red-600 mb-4">Error loading data: {error}</div>
-      <pre className="text-sm bg-gray-100 p-4 rounded max-w-2xl overflow-auto">
-        {debugInfo}
-      </pre>
-      <div className="mt-4 text-gray-600">
-        Please ensure:
-        <ul className="list-disc ml-6 mt-2">
-          <li>The JSON file exists in public/data/nifty_returns.json</li>
-          <li>The file name is exactly "nifty_returns.json"</li>
-          <li>The JSON content is valid</li>
-        </ul>
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Loading data...</div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg text-red-600">Error loading data: {error}</div>
+      </div>
+    );
+  }
 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const years = Object.keys(data).sort((a, b) => b - a); // Sort years in descending order
-  
+  const years = Object.keys(data).sort((a, b) => b - a);
+
   const filteredYears = yearFilter === 'all' ? years : years.filter(year => {
     if (yearFilter === 'recent') return parseInt(year) >= 2020;
     if (yearFilter === 'crisis') return ['2008', '2020'].includes(year);
@@ -123,7 +94,6 @@ const NiftyHeatmap = () => {
 
         {/* Controls & Stats Section */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 space-y-4 lg:space-y-0">
-          {/* Year Filter */}
           <div className="flex items-center space-x-4">
             <label className="text-gray-700 font-medium">Time Period:</label>
             <select 
@@ -137,7 +107,6 @@ const NiftyHeatmap = () => {
             </select>
           </div>
 
-          {/* Stats Display */}
           {stats && (
             <div className="flex flex-wrap gap-4">
               <div className="text-sm">
@@ -236,14 +205,7 @@ const NiftyHeatmap = () => {
 
         {/* Hover Tooltip */}
         {hoveredCell && hoveredCell.value !== undefined && (
-          <div 
-            className="fixed bg-white p-3 rounded-lg shadow-lg border text-sm"
-            style={{
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%, -50%)'
-            }}
-          >
+          <div className="fixed bg-white p-3 rounded-lg shadow-lg border text-sm">
             <div className="font-medium">{hoveredCell.month} {hoveredCell.year}</div>
             <div className={hoveredCell.value >= 0 ? 'text-green-600' : 'text-red-600'}>
               Return: {hoveredCell.value.toFixed(2)}%
