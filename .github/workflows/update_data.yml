@@ -24,25 +24,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install yfinance pandas
           
-      - name: Show current directory
-        run: |
-          pwd
-          ls -la
+      - name: Create data directory
+        run: mkdir -p data
           
       - name: Update data
         run: |
-          python update_data.py
+          python nifty_data.py
           
-      - name: Show updated files
+      - name: Verify data file
         run: |
-          ls -la public/
-          cat public/nifty_returns.json
+          ls -la data/
+          cat data/nifty_returns.json
           
       - name: Commit and push if changed
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-          git add public/nifty_returns.json
+          git add data/nifty_returns.json
           git diff --quiet && git diff --staged --quiet || (git commit -m "Update Nifty returns data" && git push)
 
       - name: Set up Node.js
