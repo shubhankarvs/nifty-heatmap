@@ -1,50 +1,69 @@
 import yfinance as yf
 import pandas as pd
 import json
-import os
 from datetime import datetime
+import os
 
 def fetch_nifty_data():
     try:
-        # Define the correct file path
-        file_path = os.path.join('public', 'data', 'nifty_returns.json')
+        # Create data directory if it doesn't exist
+        os.makedirs('data', exist_ok=True)
         
-        # Ensure the directory exists
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        
-        # Load existing data if available
-        if os.path.exists(file_path):
-            with open(file_path, 'r') as f:
+        # Check if existing data file exists
+        existing_data = {}
+        if os.path.exists('data/nifty_returns.json'):
+            with open('data/nifty_returns.json', 'r') as f:
                 existing_data = json.load(f)
-        else:
-            existing_data = {}
         
-        # Download latest data (last 6 months to ensure overlap)
-        nifty = yf.download('^NSEI', period='6mo')
+        # Download Nifty data
+        print("Downloading NIFTY data...")
+        nifty = yf.download('^NSEI', period='max')
         
         # Calculate monthly returns
+        print("Calculating monthly returns...")
         monthly_data = nifty['Close'].resample('ME').last()
         monthly_returns = monthly_data.pct_change() * 100
         
-        # Update the existing data with new values
-        for date, value in monthly_returns.items():
+        # Convert to year-month format
+        returns_dict = existing_data.copy()
+        
+        # Convert the Series to a DataFrame and reset the index
+        monthly_df = monthly_returns.reset_index()
+        monthly_df.columns = ['Date', 'Returns']
+        
+        # Iterate through DataFrame rows
+        for _, row in monthly_df.iterrows():
+            date = row['Date']
+            value = row['Returns']
+            
+            # Skip NaN values
             if pd.notna(value):
                 year = str(date.year)
                 month = date.strftime('%b')
                 
-                if year not in existing_data:
-                    existing_data[year] = {}
+                # Initialize year dictionary if it doesn't exist
+                if year not in returns_dict:
+                    returns_dict[year] = {}
                 
-                existing_data[year][month] = round(float(value), 2)
+                # Store the rounded value
+                returns_dict[year][month] = round(float(value), 2)
         
-        # Save updated data
-        with open(file_path, 'w') as f:
-            json.dump(existing_data, f, indent=4)
-            
-        print(f"Data updated successfully at {file_path}")
+        # Save to JSON file
+        print("Saving data to JSON file...")
+        with open('data/nifty_returns.json', 'w') as f:
+            json.dump(returns_dict, f, indent=4)
+        
+        print("\nData has been successfully saved to data/nifty_returns.json")
+        
+        # Print some statistics
+        years = sorted(returns_dict.keys())
+        first_year = years[0]
+        last_year = years[-1]
+        
+        print(f"\nData range: {first_year} to {last_year}")
         
     except Exception as e:
-        print(f"Error updating data: {str(e)}")
+        print(f"An error occurred: {str(e)}")
         raise e
 
 if __name__ == "__main__":
