@@ -1,4 +1,4 @@
-import yfinance as yf
+kimport yfinance as yf
 import pandas as pd
 import json
 import os
@@ -38,18 +38,17 @@ def fetch_nifty_data():
         # Convert Series to dictionary with year-month format
         returns_dict = {}
         
-        # Convert to dataframe with date index
-        monthly_returns_clean = monthly_returns.dropna()
-        
-        for date in monthly_returns_clean.index:
-            value = monthly_returns_clean[date]
-            year = str(date.year)
-            month = date.strftime('%b')
-            
-            if year not in returns_dict:
-                returns_dict[year] = {}
-            
-            returns_dict[year][month] = round(float(value), 2)
+        # Process monthly returns
+        for idx in monthly_returns.index:
+            value = monthly_returns[idx]
+            if pd.notna(value):  # Check for NaN values
+                year = str(idx.year)
+                month = idx.strftime('%b')
+                
+                if year not in returns_dict:
+                    returns_dict[year] = {}
+                
+                returns_dict[year][month] = round(float(value), 2)
         
         # Update existing data with new data
         for year in returns_dict:
@@ -61,7 +60,7 @@ def fetch_nifty_data():
         # Save to JSON file
         print("Saving data to JSON file...")
         with open(json_file_path, 'w') as f:
-            json.dump(existing_data, f, indent=4)
+            json.dump(existing_data, f, indent=4, sort_keys=True)
         
         print("Data has been successfully saved!")
         
