@@ -9,7 +9,7 @@ jobs:
   update-data:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write # Needed for pushing to the repo
     
     steps:
       - uses: actions/checkout@v4
@@ -35,29 +35,34 @@ jobs:
         run: |
           ls -la data/
           cat data/nifty_returns.json
-          
-      - name: Commit and push if changed
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-          git add data/nifty_returns.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update Nifty returns data" && git push)
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
           
       - name: Install Node dependencies
         run: |
-          npm install
-	  npm install tailwindcss-animate
+          npm ci
+          npm install tailwindcss-animate @tailwindcss/typography class-variance-authority clsx tailwind-merge lucide-react
           
       - name: Build project
         run: npm run build
         
+      - name: Commit and push if changed
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add data/nifty_returns.json dist/
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update Nifty returns data and build" && git push)
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
+          force_orphan: true  # Keep gh-pages branch clean
+          commit_message: "Deploy: ${{ github.event.head_commit.message }}"
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
