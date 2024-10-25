@@ -24,16 +24,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install yfinance pandas
           
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          
-      - name: Install Node dependencies
-        run: npm ci
+      - name: Show current directory
+        run: |
+          pwd
+          ls -la
           
       - name: Update data
-        run: python update_data.py
+        run: |
+          python update_data.py
+          
+      - name: Show updated files
+        run: |
+          ls -la public/
+          cat public/nifty_returns.json
           
       - name: Commit and push if changed
         run: |
@@ -41,6 +44,15 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git add public/nifty_returns.json
           git diff --quiet && git diff --staged --quiet || (git commit -m "Update Nifty returns data" && git push)
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install Node dependencies
+        run: |
+          npm install
           
       - name: Build project
         run: npm run build
