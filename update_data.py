@@ -38,12 +38,14 @@ def fetch_nifty_data():
         # Convert Series to dictionary with year-month format
         returns_dict = {}
         
+        # Convert monthly returns to dictionary
+        monthly_data = monthly_returns.to_dict()
+        
         # Process monthly returns
-        for idx in monthly_returns.index:
-            value = monthly_returns[idx]
+        for date, value in monthly_data.items():
             if pd.notna(value):  # Check for NaN values
-                year = str(idx.year)
-                month = idx.strftime('%b')
+                year = str(date.year)
+                month = date.strftime('%b')
                 
                 if year not in returns_dict:
                     returns_dict[year] = {}
