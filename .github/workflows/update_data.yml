@@ -36,6 +36,15 @@ jobs:
           ls -la data/
           cat data/nifty_returns.json
 
+      # Commit data updates first
+      - name: Commit data updates
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add data/nifty_returns.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update Nifty returns data" && git push)
+
+      # Then handle the build and deployment
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -50,13 +59,6 @@ jobs:
       - name: Build project
         run: npm run build
         
-      - name: Commit and push if changed
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-          git add data/nifty_returns.json dist/
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update Nifty returns data and build" && git push)
-
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
