@@ -6,87 +6,42 @@ from datetime import datetime
 
 def fetch_nifty_data():
     try:
-        print("Starting Nifty data fetch process...")
+        # Define the correct file path
+        file_path = os.path.join('public', 'data', 'nifty_returns.json')
         
-        # Create public directory if it doesn't exist
-        public_dir = 'public'
-        print(f"Creating {public_dir} directory if it doesn't exist...")
-        os.makedirs(public_dir, exist_ok=True)
-        
-        json_file_path = os.path.join(public_dir, 'nifty_returns.json')
-        print(f"JSON file will be saved to: {json_file_path}")
+        # Ensure the directory exists
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
         
         # Load existing data if available
-        existing_data = {}
-        try:
-            with open(json_file_path, 'r') as f:
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as f:
                 existing_data = json.load(f)
-                print("Loaded existing data successfully")
-        except FileNotFoundError:
-            print("No existing data file found, starting fresh")
+        else:
+            existing_data = {}
         
-        # Download Nifty data
-        print("Downloading Nifty data from Yahoo Finance...")
-        nifty = yf.download('^NSEI', period='max')
-        print(f"Downloaded {len(nifty)} rows of data")
+        # Download latest data (last 6 months to ensure overlap)
+        nifty = yf.download('^NSEI', period='6mo')
         
         # Calculate monthly returns
-        print("Calculating monthly returns...")
-        monthly_close = nifty['Close'].resample('ME').last()
-        monthly_returns = monthly_close.pct_change() * 100
+        monthly_data = nifty['Close'].resample('ME').last()
+        monthly_returns = monthly_data.pct_change() * 100
         
-        # Convert Series to dictionary with year-month format
-        returns_dict = {}
-        
-        # Iterate through the Series using iteritems() to get both index and value
+        # Update the existing data with new values
         for date, value in monthly_returns.items():
-            if pd.notna(value):  # Skip NaN values
-                # Convert the timestamp to year and month
+            if pd.notna(value):
                 year = str(date.year)
                 month = date.strftime('%b')
                 
-                # Initialize the year dictionary if it doesn't exist
-                if year not in returns_dict:
-                    returns_dict[year] = {}
+                if year not in existing_data:
+                    existing_data[year] = {}
                 
-                # Add the monthly return
-                returns_dict[year][month] = round(float(value), 2)
+                existing_data[year][month] = round(float(value), 2)
         
-        print(f"Processed {len(returns_dict)} years of data")
-        
-        # Update existing data with new data
-        for year in returns_dict:
-            if year in existing_data:
-                existing_data[year].update(returns_dict[year])
-            else:
-                existing_data[year] = returns_dict[year]
-        
-        # Save to JSON file
-        print("Saving data to JSON file...")
-        with open(json_file_path, 'w') as f:
-            json.dump(existing_data, f, indent=4, sort_keys=True)
-        
-        print("Data has been successfully saved!")
-        
-        # Print some basic statistics
-        all_returns = []
-        for year_data in existing_data.values():
-            all_returns.extend(year_data.values())
-        
-        if all_returns:
-            print("\nData Statistics:")
-            print(f"Total years: {len(existing_data)}")
-            print(f"Latest year: {max(existing_data.keys())}")
-            print(f"Maximum monthly return: {max(all_returns):.2f}%")
-            print(f"Minimum monthly return: {min(all_returns):.2f}%")
-            print(f"Average monthly return: {sum(all_returns)/len(all_returns):.2f}%")
+        # Save updated data
+        with open(file_path, 'w') as f:
+            json.dump(existing_data, f, indent=4)
             
-            # Print sample of the data
-            latest_year = max(existing_data.keys())
-            print(f"\nSample data for {latest_year}:")
-            print(json.dumps(existing_data[latest_year], indent=2))
-        
-        return True
+        print(f"Data updated successfully at {file_path}")
         
     except Exception as e:
         print(f"Error updating data: {str(e)}")
