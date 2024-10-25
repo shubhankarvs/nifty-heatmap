@@ -19,16 +19,14 @@ const NiftyHeatmap = () => {
         // Calculate yearly returns
         const yearlyData = {};
         Object.entries(jsonData).forEach(([year, months]) => {
-          // Convert monthly returns to multipliers and multiply
           const yearReturn = Object.values(months).reduce((acc, monthReturn) => {
             return acc * (1 + monthReturn/100);
           }, 1);
-          // Convert back to percentage and round to 2 decimals
           yearlyData[year] = ((yearReturn - 1) * 100).toFixed(2);
         });
         setYearlyReturns(yearlyData);
         
-        // Calculate statistics
+        // Calculate monthly statistics
         const allReturns = [];
         Object.entries(jsonData).forEach(([year, months]) => {
           Object.entries(months).forEach(([month, value]) => {
@@ -96,11 +94,11 @@ const NiftyHeatmap = () => {
           <p className="text-gray-600">Monthly percentage returns of NIFTY index over time</p>
         </div>
 
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 space-y-4 lg:space-y-0">
+        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
-            <label className="text-gray-700 font-medium">Time Period:</label>
+            <span className="text-gray-700">Time Period:</span>
             <select 
-              className="border rounded-md px-3 py-1.5 bg-white"
+              className="border rounded px-3 py-1"
               value={yearFilter}
               onChange={(e) => setYearFilter(e.target.value)}
             >
@@ -111,30 +109,23 @@ const NiftyHeatmap = () => {
           </div>
 
           {stats && (
-            <div className="flex flex-wrap gap-4">
-              <div className="text-sm">
-                <span className="text-gray-600">Best Month: </span>
-                <span className="font-semibold text-green-600">
-                  {stats.best.month} {stats.best.year} ({stats.best.value.toFixed(2)}%)
-                </span>
+            <div className="flex space-x-6">
+              <div>
+                Best Month: <span className="text-green-600 font-medium">{stats.best.month} {stats.best.year} ({stats.best.value.toFixed(2)}%)</span>
               </div>
-              <div className="text-sm">
-                <span className="text-gray-600">Worst Month: </span>
-                <span className="font-semibold text-red-600">
-                  {stats.worst.month} {stats.worst.year} ({stats.worst.value.toFixed(2)}%)
-                </span>
+              <div>
+                Worst Month: <span className="text-red-600 font-medium">{stats.worst.month} {stats.worst.year} ({stats.worst.value.toFixed(2)}%)</span>
               </div>
-              <div className="text-sm">
-                <span className="text-gray-600">Average Return: </span>
-                <span className="font-semibold">{stats.average}%</span>
+              <div>
+                Average Return: <span className="font-medium">{stats.average}%</span>
               </div>
             </div>
           )}
         </div>
 
-        <div className="mb-6 flex flex-wrap gap-3">
-          <div className="text-sm font-medium">Returns:</div>
-          <div className="flex space-x-3 text-sm">
+        <div className="mb-6">
+          <div className="text-sm">Returns:</div>
+          <div className="flex space-x-4 mt-2">
             <div className="flex items-center">
               <div className="w-4 h-4 bg-green-600 mr-1"></div>
               <span>&gt; 5%</span>
@@ -166,13 +157,13 @@ const NiftyHeatmap = () => {
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th className="p-2 border bg-gray-50 font-semibold text-gray-700">Year</th>
+                <th className="p-2 border bg-gray-50 font-medium text-left">Year</th>
                 {months.map(month => (
-                  <th key={month} className="p-2 border bg-gray-50 font-semibold text-gray-700 w-20">
+                  <th key={month} className="p-2 border bg-gray-50 font-medium">
                     {month}
                   </th>
                 ))}
-                <th className="p-2 border bg-gray-100 font-semibold text-gray-700 w-24">
+                <th className="p-2 border bg-gray-100 font-medium">
                   Year Total
                 </th>
               </tr>
@@ -180,17 +171,14 @@ const NiftyHeatmap = () => {
             <tbody>
               {filteredYears.map(year => (
                 <tr key={year}>
-                  <td className="p-2 border font-medium bg-gray-50 text-gray-700">{year}</td>
+                  <td className="p-2 border font-medium">{year}</td>
                   {months.map(month => {
                     const value = data[year]?.[month];
                     const isSignificant = isSignificantEvent(year, month);
                     return (
                       <td 
                         key={`${year}-${month}`}
-                        className={`p-2 border text-center relative transition-all duration-150 
-                          ${getColor(value)} 
-                          ${isSignificant ? 'ring-2 ring-yellow-400' : ''}
-                          hover:scale-105 hover:z-10 hover:shadow-lg`}
+                        className={`p-2 border text-center ${getColor(value)} relative`}
                         onMouseEnter={() => setHoveredCell({ year, month, value })}
                         onMouseLeave={() => setHoveredCell(null)}
                       >
@@ -201,9 +189,7 @@ const NiftyHeatmap = () => {
                       </td>
                     );
                   })}
-                  <td 
-                    className={`p-2 border text-center font-semibold ${getColor(parseFloat(yearlyReturns[year]))}`}
-                  >
+                  <td className={`p-2 border text-center font-medium ${getColor(parseFloat(yearlyReturns[year]))}`}>
                     {yearlyReturns[year]}%
                   </td>
                 </tr>
