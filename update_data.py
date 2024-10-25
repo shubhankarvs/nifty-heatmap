@@ -38,19 +38,21 @@ def fetch_nifty_data():
         # Convert Series to dictionary with year-month format
         returns_dict = {}
         
-        # Convert monthly returns to dictionary
-        monthly_data = monthly_returns.to_dict()
-        
-        # Process monthly returns
-        for date, value in monthly_data.items():
-            if pd.notna(value):  # Check for NaN values
+        # Iterate through the Series using iteritems() to get both index and value
+        for date, value in monthly_returns.items():
+            if pd.notna(value):  # Skip NaN values
+                # Convert the timestamp to year and month
                 year = str(date.year)
                 month = date.strftime('%b')
                 
+                # Initialize the year dictionary if it doesn't exist
                 if year not in returns_dict:
                     returns_dict[year] = {}
                 
+                # Add the monthly return
                 returns_dict[year][month] = round(float(value), 2)
+        
+        print(f"Processed {len(returns_dict)} years of data")
         
         # Update existing data with new data
         for year in returns_dict:
@@ -78,6 +80,11 @@ def fetch_nifty_data():
             print(f"Maximum monthly return: {max(all_returns):.2f}%")
             print(f"Minimum monthly return: {min(all_returns):.2f}%")
             print(f"Average monthly return: {sum(all_returns)/len(all_returns):.2f}%")
+            
+            # Print sample of the data
+            latest_year = max(existing_data.keys())
+            print(f"\nSample data for {latest_year}:")
+            print(json.dumps(existing_data[latest_year], indent=2))
         
         return True
         
