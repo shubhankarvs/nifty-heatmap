@@ -32,14 +32,15 @@ def fetch_nifty_data():
         
         # Calculate monthly returns
         print("Calculating monthly returns...")
-        monthly_close = nifty['Close'].resample('M').last()
+        monthly_close = nifty['Close'].resample('ME').last()
         monthly_returns = monthly_close.pct_change() * 100
         
         # Convert Series to dictionary with year-month format
         returns_dict = {}
         
         for date, value in monthly_returns.items():
-            if pd.notna(value):  # Skip NaN values
+            # Skip NaN values using pandas.isna()
+            if not pd.isna(value):
                 year = str(date.year)
                 month = date.strftime('%b')
                 
@@ -48,25 +49,29 @@ def fetch_nifty_data():
                 
                 returns_dict[year][month] = round(float(value), 2)
         
-        # Merge with existing data (if any)
-        merged_data = {**existing_data, **returns_dict}
+        # Update existing data with new data
+        for year in returns_dict:
+            if year in existing_data:
+                existing_data[year].update(returns_dict[year])
+            else:
+                existing_data[year] = returns_dict[year]
         
         # Save to JSON file
         print("Saving data to JSON file...")
         with open(json_file_path, 'w') as f:
-            json.dump(merged_data, f, indent=4)
+            json.dump(existing_data, f, indent=4)
         
         print("Data has been successfully saved!")
         
         # Print some basic statistics
         all_returns = []
-        for year_data in merged_data.values():
+        for year_data in existing_data.values():
             all_returns.extend(year_data.values())
         
         if all_returns:
             print("\nData Statistics:")
-            print(f"Total years: {len(merged_data)}")
-            print(f"Latest year: {max(merged_data.keys())}")
+            print(f"Total years: {len(existing_data)}")
+            print(f"Latest year: {max(existing_data.keys())}")
             print(f"Maximum monthly return: {max(all_returns):.2f}%")
             print(f"Minimum monthly return: {min(all_returns):.2f}%")
             print(f"Average monthly return: {sum(all_returns)/len(all_returns):.2f}%")
