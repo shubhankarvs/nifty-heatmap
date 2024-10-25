@@ -10,31 +10,37 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # Needed for pushing to the repo
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-          
+
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install yfinance pandas
-          
+
       - name: Create data directory
         run: mkdir -p data
-          
+
       - name: Update data
         run: |
           python update_data.py
-          
+
       - name: Verify data file
         run: |
           ls -la data/
           cat data/nifty_returns.json
+
+      # Clear npm cache and remove old build files
+      - name: Clean previous build
+        run: |
+          rm -rf dist || true
+          rm -rf node_modules || true
 
       # Commit data updates first
       - name: Commit data updates
@@ -50,16 +56,16 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          
+        
       - name: Install Node dependencies
         run: |
           npm ci
           npm install tailwindcss-animate @tailwindcss/typography class-variance-authority clsx tailwind-merge lucide-react
-          
-      - name: Build project
+
+      - name: Build project   
         run: npm run build
-        
-      - name: Deploy to GitHub Pages
+          
+      - name: Deploy to GitHub Pages 
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -68,3 +74,6 @@ jobs:
           commit_message: "Deploy: ${{ github.event.head_commit.message }}"
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
+          cname: ${{ secrets.CNAME }}  # If you have a custom domain
+          publish_branch: gh-pages
+          full_commit_message: "Deploy: ${{ github.event.head_commit.message }} [skip ci]"
