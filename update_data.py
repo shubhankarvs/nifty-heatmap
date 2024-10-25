@@ -1,80 +1,79 @@
 import yfinance as yf
 import pandas as pd
 import json
-from datetime import datetime
 import os
-import sys
+from datetime import datetime
 
 def fetch_nifty_data():
     try:
         print("Starting Nifty data fetch process...")
         
-        # Ensure the public directory exists
-        print("Creating public directory if it doesn't exist...")
-        os.makedirs('public', exist_ok=True)
+        # Create public directory if it doesn't exist
+        public_dir = 'public'
+        print(f"Creating {public_dir} directory if it doesn't exist...")
+        os.makedirs(public_dir, exist_ok=True)
         
-        # Define the path for the JSON file
-        json_path = 'public/nifty_returns.json'
-        print(f"JSON file will be saved to: {json_path}")
+        json_file_path = os.path.join(public_dir, 'nifty_returns.json')
+        print(f"JSON file will be saved to: {json_file_path}")
         
-        # Load existing data if it exists
+        # Load existing data if available
         existing_data = {}
-        if os.path.exists(json_path):
-            print("Found existing data file, loading it...")
-            with open(json_path, 'r') as f:
+        try:
+            with open(json_file_path, 'r') as f:
                 existing_data = json.load(f)
-            print("Existing data loaded successfully")
-        else:
+                print("Loaded existing data successfully")
+        except FileNotFoundError:
             print("No existing data file found, starting fresh")
         
         # Download Nifty data
         print("Downloading Nifty data from Yahoo Finance...")
-        nifty = yf.download('^NSEI', period='6mo', progress=False)
+        nifty = yf.download('^NSEI', period='max')
         print(f"Downloaded {len(nifty)} rows of data")
-        
-        if len(nifty) == 0:
-            raise Exception("No data downloaded from Yahoo Finance")
         
         # Calculate monthly returns
         print("Calculating monthly returns...")
-        monthly_data = nifty['Close'].resample('ME').last()
-        monthly_returns = monthly_data.pct_change() * 100
+        monthly_close = nifty['Close'].resample('M').last()
+        monthly_returns = monthly_close.pct_change() * 100
         
-        # Convert the Series to a DataFrame with a DateTimeIndex
-        monthly_returns_df = monthly_returns.to_frame('returns')
+        # Convert Series to dictionary with year-month format
+        returns_dict = {}
         
-        # Update the existing data with new values
-        print("Updating data dictionary...")
-        update_count = 0
-        
-        for index, row in monthly_returns_df.iterrows():
-            value = row['returns']
-            if not pd.isna(value):  # Check for NaN values
-                year = str(index.year)
-                month = index.strftime('%b')
+        for date, value in monthly_returns.items():
+            if pd.notna(value):  # Skip NaN values
+                year = str(date.year)
+                month = date.strftime('%b')
                 
-                if year not in existing_data:
-                    existing_data[year] = {}
+                if year not in returns_dict:
+                    returns_dict[year] = {}
                 
-                existing_data[year][month] = round(float(value), 2)
-                update_count += 1
+                returns_dict[year][month] = round(float(value), 2)
         
-        print(f"Updated {update_count} months of data")
+        # Merge with existing data (if any)
+        merged_data = {**existing_data, **returns_dict}
         
-        # Save updated data
-        print(f"Saving updated data to {json_path}...")
-        with open(json_path, 'w') as f:
-            json.dump(existing_data, f, indent=4)
-            
-        print("Data updated successfully")
-        return True
+        # Save to JSON file
+        print("Saving data to JSON file...")
+        with open(json_file_path, 'w') as f:
+            json.dump(merged_data, f, indent=4)
+        
+        print("Data has been successfully saved!")
+        
+        # Print some basic statistics
+        all_returns = []
+        for year_data in merged_data.values():
+            all_returns.extend(year_data.values())
+        
+        if all_returns:
+            print("\nData Statistics:")
+            print(f"Total years: {len(merged_data)}")
+            print(f"Latest year: {max(merged_data.keys())}")
+            print(f"Maximum monthly return: {max(all_returns):.2f}%")
+            print(f"Minimum monthly return: {min(all_returns):.2f}%")
+            print(f"Average monthly return: {sum(all_returns)/len(all_returns):.2f}%")
         
     except Exception as e:
-        print(f"Error updating data: {str(e)}", file=sys.stderr)
-        import traceback
-        print(traceback.format_exc(), file=sys.stderr)
-        return False
+        print(f"Error updating data: {str(e)}")
+        raise e
 
 if __name__ == "__main__":
-    success = fetch_nifty_data()
-    sys.exit(0 if success else 1)
+    fetch_nifty_data()
