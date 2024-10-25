@@ -2,18 +2,27 @@ import yfinance as yf
 import pandas as pd
 import json
 from datetime import datetime
+import os
 
 def fetch_nifty_data():
     try:
-        # Load existing data first
-        with open('data/nifty_returns.json', 'r') as f:
-            existing_data = json.load(f)
+        # Ensure the public directory exists
+        os.makedirs('public', exist_ok=True)
         
-        # Download latest data (last 6 months to ensure overlap)
+        # Define the path for the JSON file
+        json_path = 'public/nifty_returns.json'
+        
+        # Load existing data if it exists
+        existing_data = {}
+        if os.path.exists(json_path):
+            with open(json_path, 'r') as f:
+                existing_data = json.load(f)
+        
+        # Download Nifty data (last 6 months to ensure overlap)
         nifty = yf.download('^NSEI', period='6mo')
         
         # Calculate monthly returns
-        monthly_data = nifty['Close'].resample('ME').last()
+        monthly_data = nifty['Close'].resample('M').last()
         monthly_returns = monthly_data.pct_change() * 100
         
         # Update the existing data with new values
@@ -28,7 +37,7 @@ def fetch_nifty_data():
                 existing_data[year][month] = round(float(value), 2)
         
         # Save updated data
-        with open('data/nifty_returns.json', 'w') as f:
+        with open(json_path, 'w') as f:
             json.dump(existing_data, f, indent=4)
             
         print("Data updated successfully")
