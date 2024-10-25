@@ -10,11 +10,17 @@ const NiftyHeatmap = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        // Update the path to the correct location
-        const response = await window.fs.readFile('public/data/nifty_returns.json', { encoding: 'utf8' });
-        const jsonData = JSON.parse(response);
-        setData(jsonData);
+      fetchData();
+  }, []);
+
+  async function fetchData() {
+    try {
+        // Fetch the JSON file from the correct path
+        const response = await fetch('nifty_returns.json');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const jsonData = await response.json();
         
         // Calculate statistics
         const allReturns = [];
