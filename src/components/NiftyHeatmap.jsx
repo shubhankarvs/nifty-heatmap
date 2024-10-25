@@ -9,18 +9,11 @@ const NiftyHeatmap = () => {
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      fetchData();
-  }, []);
-
-  async function fetchData() {
-    try {
-        // Fetch the JSON file from the correct path
-        const response = await fetch('nifty_returns.json');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const jsonData = await response.json();
+    async function fetchData() {
+      try {
+        const response = await window.fs.readFile('nifty_returns.json', { encoding: 'utf8' });
+        const jsonData = JSON.parse(response);
+        setData(jsonData);
         
         // Calculate statistics
         const allReturns = [];
@@ -42,7 +35,8 @@ const NiftyHeatmap = () => {
       } finally {
         setIsLoading(false);
       }
-    };
+    }
+
     fetchData();
   }, []);
 
