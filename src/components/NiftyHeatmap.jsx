@@ -96,153 +96,141 @@ const NiftyHeatmap = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header Section */}
-      <header className="border-b bg-white sticky top-0 z-20">
-        <div className="max-w-screen-xl mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-gray-900">NIFTY Monthly Returns</h1>
-          <p className="text-gray-600 mt-1">Monthly percentage returns of NIFTY index over time</p>
-        </div>
-      </header>
+    <div className="min-h-screen bg-white p-8">
+      {/* Header - More compact now */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">NIFTY Monthly Returns Heatmap</h1>
+        <p className="text-gray-600 text-sm">Monthly percentage returns of NIFTY index over time</p>
+      </div>
 
-      <main className="max-w-screen-xl mx-auto px-4 py-6">
-        {/* Controls Section */}
-        <div className="space-y-6 mb-8">
-          {/* Time Period & Stats */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <label className="text-gray-700 font-medium">Time Period:</label>
-              <select 
-                className="border rounded-lg px-3 py-2 bg-white text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                value={yearFilter}
-                onChange={(e) => setYearFilter(e.target.value)}
-              >
-                <option value="all">All Years</option>
-                <option value="recent">Recent (2020+)</option>
-                <option value="crisis">Crisis Years</option>
-              </select>
-            </div>
-
-            {stats && (
-              <div className="flex flex-wrap gap-6 text-sm">
-                <div>
-                  <span className="text-gray-600">Best:</span>
-                  <span className="ml-1 font-medium text-green-600">
-                    {stats.best.month} {stats.best.year} ({stats.best.value.toFixed(2)}%)
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Worst:</span>
-                  <span className="ml-1 font-medium text-red-600">
-                    {stats.worst.month} {stats.worst.year} ({stats.worst.value.toFixed(2)}%)
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Average:</span>
-                  <span className="ml-1 font-medium">{stats.average}%</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Color Legend - Collapsible */}
-          <div className="border rounded-lg overflow-hidden">
-            <button 
-              onClick={() => setShowLegend(!showLegend)}
-              className="w-full px-4 py-3 flex items-center justify-between text-sm hover:bg-gray-50"
+      {/* Controls and Stats - Single line */}
+      <div className="mb-6">
+        <div className="flex flex-wrap items-center gap-8">
+          <div className="flex items-center gap-2">
+            <span className="text-gray-700">Time Period:</span>
+            <select 
+              className="border rounded px-2 py-1 text-sm"
+              value={yearFilter}
+              onChange={(e) => setYearFilter(e.target.value)}
             >
-              <span className="font-medium text-gray-700">Color Legend</span>
-              <ChevronDown className={`w-5 h-5 transform transition-transform ${showLegend ? 'rotate-180' : ''}`} />
-            </button>
-            
-            {showLegend && (
-              <div className="px-4 py-3 grid grid-cols-2 sm:grid-cols-6 gap-3 text-sm border-t bg-gray-50">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-green-600"></div>
-                  <span>&gt; 5%</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-green-500"></div>
-                  <span>2-5%</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-green-300"></div>
-                  <span>0-2%</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-red-300"></div>
-                  <span>0 to -2%</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-red-500"></div>
-                  <span>-2 to -5%</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-red-600"></div>
-                  <span>&lt; -5%</span>
-                </div>
-              </div>
-            )}
+              <option value="all">All Years</option>
+              <option value="recent">Recent (2020+)</option>
+              <option value="crisis">Crisis Years</option>
+            </select>
           </div>
-        </div>
 
-        {/* Heatmap Table */}
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full border-collapse min-w-max">
-            <thead>
-              <tr>
-                <th className="sticky left-0 z-10 bg-gray-100 p-3 border-b font-semibold text-gray-700 text-sm">Year</th>
-                {MONTHS.map(month => (
-                  <th key={month} className="p-3 border-b bg-gray-100 font-semibold text-gray-700 text-sm w-16">
-                    {month}
-                  </th>
-                ))}
-                <th className="p-3 border-b bg-gray-200 font-semibold text-gray-800 text-sm w-20">
-                  Year Total
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredYears.map(year => (
-                <tr key={year}>
-                  <td className="sticky left-0 z-10 bg-gray-100 p-3 border-b font-medium text-gray-700 text-sm">{year}</td>
-                  {MONTHS.map(month => {
-                    const value = data[year]?.[month];
-                    const isSignificant = isSignificantEvent(year, month);
-                    return (
-                      <td 
-                        key={`${year}-${month}`}
-                        className={`p-3 border-b text-center text-sm relative transition-colors
-                          ${getColor(value)} 
-                          ${isSignificant ? 'ring-2 ring-yellow-400' : ''}`}
-                        onClick={() => setHoveredCell({ year, month, value })}
-                      >
-                        {value !== undefined ? value.toFixed(2) : ''}
-                        {isSignificant && (
-                          <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full"></div>
-                        )}
-                      </td>
-                    );
-                  })}
-                  <td className={`p-3 border-b text-center font-semibold text-sm ${getColor(yearlyReturns[year])}`}>
-                    {yearlyReturns[year]}%
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {stats && (
+            <div className="flex items-center gap-6 text-sm">
+              <div>
+                Best Month: <span className="text-green-600">{stats.best.month} {stats.best.year} ({stats.best.value.toFixed(2)}%)</span>
+              </div>
+              <div>
+                Worst Month: <span className="text-red-600">{stats.worst.month} {stats.worst.year} ({stats.worst.value.toFixed(2)}%)</span>
+              </div>
+              <div>
+                Average Return: <span className="font-medium">{stats.average}%</span>
+              </div>
+            </div>
+          )}
         </div>
+      </div>
 
-        {/* Mobile-friendly tooltip */}
-        {hoveredCell && (
-          <div className="fixed bottom-0 left-0 right-0 bg-white p-4 border-t shadow-lg text-center sm:w-64 sm:left-auto sm:right-4 sm:bottom-4 sm:rounded-lg">
-            <div className="font-medium">{hoveredCell.month} {hoveredCell.year}</div>
-            <div className={hoveredCell.value >= 0 ? 'text-green-600' : 'text-red-600'}>
-              Return: {hoveredCell.value.toFixed(2)}%
+      {/* Color Legend - Inline */}
+      <div className="mb-6">
+        <div className="flex items-center gap-4 text-sm">
+          <span className="text-gray-700">Returns:</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-green-600"></div>
+              <span>{'>'}5%</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-green-500"></div>
+              <span>2-5%</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-green-300"></div>
+              <span>0-2%</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-red-300"></div>
+              <span>0 to -2%</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-red-500"></div>
+              <span>-2 to -5%</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-red-600"></div>
+              <span>{'<'}-5%</span>
             </div>
           </div>
-        )}
-      </main>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto border rounded-lg">
+        <table className="w-full border-collapse bg-white text-sm">
+          <thead>
+            <tr>
+              <th className="border-b p-2 bg-gray-50 text-left font-medium text-gray-700 sticky left-0">Year</th>
+              {MONTHS.map(month => (
+                <th key={month} className="border-b p-2 bg-gray-50 font-medium text-gray-700 text-center">
+                  {month}
+                </th>
+              ))}
+              <th className="border-b p-2 bg-gray-50 font-medium text-gray-700 text-center">
+                Total
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredYears.map(year => (
+              <tr key={year}>
+                <td className="border-b p-2 font-medium text-gray-700 sticky left-0 bg-white">{year}</td>
+                {MONTHS.map(month => {
+                  const value = data[year]?.[month];
+                  const isSignificant = isSignificantEvent(year, month);
+                  return (
+                    <td 
+                      key={`${year}-${month}`}
+                      className={`border-b p-2 text-center relative
+                        ${getColor(value)} 
+                        ${isSignificant ? 'ring-1 ring-yellow-400' : ''}`}
+                    >
+                      {value !== undefined ? value.toFixed(2) : ''}
+                      {isSignificant && (
+                        <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-yellow-400 rounded-full"></div>
+                      )}
+                    </td>
+                  );
+                })}
+                <td className={`border-b p-2 text-center font-medium ${getColor(yearlyReturns[year])}`}>
+                  {yearlyReturns[year]}%
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Tooltip - Only show on hover, not click */}
+      {hoveredCell && (
+        <div 
+          className="fixed bg-white p-3 rounded shadow-lg border text-sm"
+          style={{
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 50
+          }}
+        >
+          <div className="font-medium text-gray-900">{hoveredCell.month} {hoveredCell.year}</div>
+          <div className={hoveredCell.value >= 0 ? 'text-green-600' : 'text-red-600'}>
+            {hoveredCell.value.toFixed(2)}%
+          </div>
+        </div>
+      )}
     </div>
   );
 };
