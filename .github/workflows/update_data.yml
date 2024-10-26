@@ -31,15 +31,24 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install yfinance pandas
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Ensure data directory exists
-        run: mkdir -p public/data
+      - name: Ensure directories exist
+        run: |
+          mkdir -p data
+          mkdir -p public/data
 
       - name: Update NIFTY data
         run: |
           python update_data.py
           cp data/nifty_returns.json public/data/
+
+      - name: Commit data updates
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add data/nifty_returns.json public/data/nifty_returns.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update Nifty returns data" && git push)
 
       # Node.js setup and build
       - name: Set up Node.js
