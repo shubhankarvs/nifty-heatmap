@@ -126,8 +126,8 @@ const App = () => {
       <div className="bg-white shadow">
         <div className="p-4 md:p-6 max-w-full mx-auto">
           <div className="mb-4 md:mb-6">
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">NIFTY Monthly Returns Heatmap</h1>
-            <p className="text-sm md:text-base text-gray-600 mt-1">Monthly percentage returns of NIFTY index over time</p>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">NIFTY 50 Monthly Returns Heatmap</h1>
+            <p className="text-sm md:text-base text-gray-600 mt-1">Monthly percentage returns of NIFTY 50 index over time</p>
           </div>
 
           <div className="space-y-4">
