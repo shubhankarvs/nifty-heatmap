@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const NiftyHeatmap = () => {
+const App = () => {
   const [data, setData] = useState(null);
   const [yearlyReturns, setYearlyReturns] = useState({});
   const [error, setError] = useState(null);
@@ -10,15 +10,16 @@ const NiftyHeatmap = () => {
   const [hoveredCell, setHoveredCell] = useState(null);
   const [yearFilter, setYearFilter] = useState('all');
   const [stats, setStats] = useState(null);
-  const [debugInfo, setDebugInfo] = useState('');
+  const [debugInfo, setDebugInfo] = useState('Starting data load...');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await window.fs.readFile('nifty_returns.json');
-        const jsonData = JSON.parse(new TextDecoder().decode(response));
+        setDebugInfo(prev => prev + '\nAttempting to fetch data...');
+        const response = await window.fs.readFile('data/nifty_returns.json', { encoding: 'utf8' });
+        const jsonData = JSON.parse(response);
         setData(jsonData);
-        setDebugInfo(prev => prev + '\nData loaded successfully');
+        setDebugInfo(prev => prev + '\nData parsed successfully');
         
         // Calculate yearly returns
         const yearlyData = {};
@@ -75,6 +76,7 @@ const NiftyHeatmap = () => {
     return (
       <div className="flex items-center justify-center min-h-screen p-4">
         <div className="text-lg">Loading data...</div>
+        <pre className="text-sm text-gray-600">{debugInfo}</pre>
       </div>
     );
   }
@@ -88,7 +90,7 @@ const NiftyHeatmap = () => {
     );
   }
 
-  const years = Object.keys(data).sort((a, b) => b - a);
+  const years = Object.keys(data || {}).sort((a, b) => b - a);
   const filteredYears = yearFilter === 'all' ? years : years.filter(year => {
     if (yearFilter === 'recent') return parseInt(year) >= 2020;
     if (yearFilter === 'crisis') return ['2008', '2020'].includes(year);
@@ -96,18 +98,18 @@ const NiftyHeatmap = () => {
   });
 
   return (
-    <div className="min-h-screen bg-white p-6 max-w-full overflow-x-auto">
+    <div className="min-h-screen bg-white p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">NIFTY Monthly Returns Heatmap</h1>
         <p className="text-gray-600 mt-1">Monthly percentage returns of NIFTY index over time</p>
       </div>
 
-      <div className="mb-6 flex flex-col gap-4">
-        <div className="flex flex-wrap justify-between items-center gap-4">
+      <div className="mb-6 space-y-4">
+        <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="text-gray-700">Time Period:</span>
             <select 
-              className="border rounded px-2 py-1 min-w-[120px]"
+              className="border rounded px-2 py-1"
               value={yearFilter}
               onChange={(e) => setYearFilter(e.target.value)}
             >
@@ -132,37 +134,35 @@ const NiftyHeatmap = () => {
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+        <div className="flex flex-wrap gap-4 text-sm">
           <span className="text-gray-700">Returns:</span>
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-            {[
-              { range: '>5%', color: 'bg-green-600' },
-              { range: '2-5%', color: 'bg-green-500' },
-              { range: '0-2%', color: 'bg-green-300' },
-              { range: '0 to -2%', color: 'bg-red-300' },
-              { range: '-2 to -5%', color: 'bg-red-500' },
-              { range: '<-5%', color: 'bg-red-600' }
-            ].map(({ range, color }) => (
-              <div key={range} className="flex items-center gap-1">
-                <div className={`w-4 h-4 ${color}`}></div>
-                <span>{range}</span>
-              </div>
-            ))}
-          </div>
+          {[
+            { range: '>5%', color: 'bg-green-600' },
+            { range: '2-5%', color: 'bg-green-500' },
+            { range: '0-2%', color: 'bg-green-300' },
+            { range: '0 to -2%', color: 'bg-red-300' },
+            { range: '-2 to -5%', color: 'bg-red-500' },
+            { range: '<-5%', color: 'bg-red-600' }
+          ].map(({ range, color }) => (
+            <div key={range} className="flex items-center gap-1">
+              <div className={`w-4 h-4 ${color}`}></div>
+              <span>{range}</span>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="overflow-x-auto border rounded-lg shadow">
+      <div className="overflow-x-auto">
         <table className="w-full border-collapse bg-white text-sm">
           <thead>
             <tr>
-              <th className="border-b p-2 bg-gray-50 text-left font-medium text-gray-700 sticky left-0 z-10">Year</th>
+              <th className="border p-2 bg-gray-50 text-left font-medium text-gray-700">Year</th>
               {MONTHS.map(month => (
-                <th key={month} className="border-b p-2 bg-gray-50 font-medium text-gray-700 text-center min-w-[80px]">
+                <th key={month} className="border p-2 bg-gray-50 font-medium text-gray-700 text-center">
                   {month}
                 </th>
               ))}
-              <th className="border-b p-2 bg-gray-100 font-medium text-gray-700 text-center min-w-[100px]">
+              <th className="border p-2 bg-gray-100 font-medium text-gray-700 text-center">
                 Year Total
               </th>
             </tr>
@@ -170,13 +170,13 @@ const NiftyHeatmap = () => {
           <tbody>
             {filteredYears.map(year => (
               <tr key={year}>
-                <td className="border-b p-2 font-medium text-gray-700 sticky left-0 bg-white z-10">{year}</td>
+                <td className="border p-2 font-medium text-gray-700">{year}</td>
                 {MONTHS.map(month => {
                   const value = data[year]?.[month];
                   return (
                     <td 
                       key={`${year}-${month}`}
-                      className={`border-b p-2 text-center ${getColor(value)}`}
+                      className={`border p-2 text-center ${getColor(value)}`}
                       onMouseEnter={() => setHoveredCell({ year, month, value })}
                       onMouseLeave={() => setHoveredCell(null)}
                     >
@@ -184,7 +184,7 @@ const NiftyHeatmap = () => {
                     </td>
                   );
                 })}
-                <td className={`border-b p-2 text-center font-medium ${getColor(parseFloat(yearlyReturns[year]))}`}>
+                <td className={`border p-2 text-center font-medium ${getColor(parseFloat(yearlyReturns[year]))}`}>
                   {yearlyReturns[year]}%
                 </td>
               </tr>
@@ -213,4 +213,4 @@ const NiftyHeatmap = () => {
   );
 };
 
-export default NiftyHeatmap;
+export default App;
