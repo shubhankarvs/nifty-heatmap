@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Card } from '@/components/ui/card';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -10,29 +11,27 @@ const NiftyHeatmap = () => {
   const [hoveredCell, setHoveredCell] = useState(null);
   const [yearFilter, setYearFilter] = useState('all');
   const [stats, setStats] = useState(null);
+  const [debugInfo, setDebugInfo] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('data/nifty_returns.json');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const jsonData = await response.json();
-        setData(jsonData);
+        // Read file using the provided API
+        const response = await window.fs.readFile('data/nifty_returns.json');
+        const jsonData = JSON.parse(new TextDecoder().decode(response));
         
-        // Calculate yearly returns - Fixed calculation
+        setData(jsonData);
+        setDebugInfo(prev => prev + '\nData loaded successfully');
+        
+        // Calculate yearly returns
         const yearlyData = {};
         Object.entries(jsonData).forEach(([year, months]) => {
-          // Start with base value of 100
           let yearValue = 100;
-          
-          // Apply each month's return compounded
           Object.values(months).forEach(monthReturn => {
             if (monthReturn !== undefined && monthReturn !== null) {
               yearValue *= (1 + monthReturn/100);
             }
           });
-          
-          // Convert final value to percentage return
           yearlyData[year] = (yearValue - 100).toFixed(2);
         });
         setYearlyReturns(yearlyData);
@@ -56,6 +55,7 @@ const NiftyHeatmap = () => {
       } catch (error) {
         console.error('Error:', error);
         setError(error.message);
+        setDebugInfo(prev => prev + '\nError: ' + error.message);
       } finally {
         setIsLoading(false);
       }
@@ -63,31 +63,6 @@ const NiftyHeatmap = () => {
 
     fetchData();
   }, []);
-
-  if (!data && !error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen p-4">
-        <div className="text-lg">Loading data...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-4">
-        <div className="text-red-600">Error loading data: {error}</div>
-      </div>
-    );
-  }
-
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const years = Object.keys(data).sort((a, b) => b - a);
-  
-  const filteredYears = yearFilter === 'all' ? years : years.filter(year => {
-    if (yearFilter === 'recent') return parseInt(year) >= 2020;
-    if (yearFilter === 'crisis') return ['2008', '2020'].includes(year);
-    return true;
-  });
 
   const getColor = (value) => {
     if (value === undefined) return 'bg-gray-100';
@@ -99,17 +74,38 @@ const NiftyHeatmap = () => {
     return 'bg-red-600 text-white';
   };
 
- return (
-    <div className="min-h-screen bg-white p-8">
-      {/* Main Header */}
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="text-lg">Loading data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4">
+        <div className="text-red-600 mb-4">Error loading data: {error}</div>
+        <pre className="text-sm bg-gray-100 p-4 rounded">{debugInfo}</pre>
+      </div>
+    );
+  }
+
+  const years = Object.keys(data).sort((a, b) => b - a);
+  const filteredYears = yearFilter === 'all' ? years : years.filter(year => {
+    if (yearFilter === 'recent') return parseInt(year) >= 2020;
+    if (yearFilter === 'crisis') return ['2008', '2020'].includes(year);
+    return true;
+  });
+
+  return (
+    <Card className="min-h-screen bg-white p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">NIFTY Monthly Returns Heatmap</h1>
         <p className="text-gray-600 mt-1">Monthly percentage returns of NIFTY index over time</p>
       </div>
 
-      {/* Controls and Stats Row */}
       <div className="mb-6 flex flex-col gap-4">
-        {/* Time Period Filter and Stats */}
         <div className="flex flex-wrap justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="text-gray-700">Time Period:</span>
@@ -127,10 +123,10 @@ const NiftyHeatmap = () => {
           {stats && (
             <div className="flex flex-wrap gap-4 text-sm">
               <div>
-                Best Month: <span className="text-green-600">May 2009 (28.07%)</span>
+                Best Month: <span className="text-green-600">{stats.best.month} {stats.best.year} ({stats.best.value.toFixed(2)}%)</span>
               </div>
               <div>
-                Worst Month: <span className="text-red-600">Oct 2008 (-26.41%)</span>
+                Worst Month: <span className="text-red-600">{stats.worst.month} {stats.worst.year} ({stats.worst.value.toFixed(2)}%)</span>
               </div>
               <div>
                 Average Return: <span>{stats.average}%</span>
@@ -139,39 +135,26 @@ const NiftyHeatmap = () => {
           )}
         </div>
 
-        {/* Color Legend */}
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
           <span className="text-gray-700">Returns:</span>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-            <div className="flex items-center gap-1">
-              <div className="w-4 h-4 bg-green-600"></div>
-              <span>{'>'}5%</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-4 h-4 bg-green-500"></div>
-              <span>2-5%</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-4 h-4 bg-green-300"></div>
-              <span>0-2%</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-4 h-4 bg-red-300"></div>
-              <span>0 to -2%</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-4 h-4 bg-red-500"></div>
-              <span>-2 to -5%</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-4 h-4 bg-red-600"></div>
-              <span>{'<'}-5%</span>
-            </div>
+            {[
+              { range: '>5%', color: 'bg-green-600' },
+              { range: '2-5%', color: 'bg-green-500' },
+              { range: '0-2%', color: 'bg-green-300' },
+              { range: '0 to -2%', color: 'bg-red-300' },
+              { range: '-2 to -5%', color: 'bg-red-500' },
+              { range: '<-5%', color: 'bg-red-600' }
+            ].map(({ range, color }) => (
+              <div key={range} className="flex items-center gap-1">
+                <div className={`w-4 h-4 ${color}`}></div>
+                <span>{range}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto border rounded-lg">
         <table className="w-full border-collapse bg-white text-sm">
           <thead>
@@ -182,8 +165,8 @@ const NiftyHeatmap = () => {
                   {month}
                 </th>
               ))}
-              <th className="border-b p-2 bg-gray-50 font-medium text-gray-700 text-center">
-                Total
+              <th className="border-b p-2 bg-gray-100 font-medium text-gray-700 text-center">
+                Year Total
               </th>
             </tr>
           </thead>
@@ -205,7 +188,7 @@ const NiftyHeatmap = () => {
                   );
                 })}
                 <td className={`border-b p-2 text-center font-medium ${getColor(parseFloat(yearlyReturns[year]))}`}>
-                  {yearlyReturns[year] !== undefined ? `${yearlyReturns[year]}%` : '%'}
+                  {yearlyReturns[year]}%
                 </td>
               </tr>
             ))}
@@ -213,7 +196,6 @@ const NiftyHeatmap = () => {
         </table>
       </div>
 
-      {/* Tooltip */}
       {hoveredCell && hoveredCell.value !== undefined && (
         <div 
           className="fixed bg-white p-2 rounded shadow-lg border text-sm"
@@ -230,7 +212,7 @@ const NiftyHeatmap = () => {
           </div>
         </div>
       )}
-    </div>
+    </Card>
   );
 };
 

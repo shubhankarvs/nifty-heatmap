@@ -1,79 +1,76 @@
-name: Update Nifty Data
+name: Update Data and Deploy
 
 on:
   schedule:
-    - cron: '0 14 * * *'  # Runs at 2 PM UTC (after market close)
-  workflow_dispatch:  # Allows manual trigger
+    - cron: '0 14 * * *'  # Runs at 2 PM UTC
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  update-data:
+  build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Needed for pushing to the repo
+      contents: write
+      pages: write
+      id-token: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
+      # Python setup and data update
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
+          cache: 'pip'
 
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install yfinance pandas
 
-      - name: Create data directory
-        run: mkdir -p data
+      - name: Ensure data directory exists
+        run: mkdir -p public/data
 
-      - name: Update data
+      - name: Update NIFTY data
         run: |
           python update_data.py
+          cp data/nifty_returns.json public/data/
 
-      - name: Verify data file
-        run: |
-          ls -la data/
-          cat data/nifty_returns.json
-
-      # Clear npm cache and remove old build files
-      - name: Clean previous build
-        run: |
-          rm -rf dist || true
-          rm -rf node_modules || true
-
-      # Commit data updates first
-      - name: Commit data updates
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-          git add data/nifty_returns.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update Nifty returns data" && git push)
-
-      # Then handle the build and deployment
+      # Node.js setup and build
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-        
-      - name: Install Node dependencies
+
+      - name: Install dependencies
         run: |
           npm ci
           npm install tailwindcss-animate @tailwindcss/typography class-variance-authority clsx tailwind-merge lucide-react
 
-      - name: Build project   
+      # Build the project
+      - name: Build
         run: npm run build
-          
-      - name: Deploy to GitHub Pages 
+        env:
+          CI: false # Prevents treating warnings as errors
+
+      # Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-          force_orphan: true  # Keep gh-pages branch clean
-          commit_message: "Deploy: ${{ github.event.head_commit.message }}"
+          force_orphan: true
+          publish_branch: gh-pages
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
-          cname: ${{ secrets.CNAME }}  # If you have a custom domain
-          publish_branch: gh-pages
-          full_commit_message: "Deploy: ${{ github.event.head_commit.message }} [skip ci]"
+          commit_message: |
+            Deploy: ${{ github.event.head_commit.message }}
+            
+            Updates from workflow run ${{ github.run_number }}
+            [skip ci]
