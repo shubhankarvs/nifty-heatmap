@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -16,10 +15,8 @@ const NiftyHeatmap = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Read file using the provided API
-        const response = await window.fs.readFile('data/nifty_returns.json');
+        const response = await window.fs.readFile('nifty_returns.json');
         const jsonData = JSON.parse(new TextDecoder().decode(response));
-        
         setData(jsonData);
         setDebugInfo(prev => prev + '\nData loaded successfully');
         
@@ -99,7 +96,7 @@ const NiftyHeatmap = () => {
   });
 
   return (
-    <Card className="min-h-screen bg-white p-6">
+    <div className="min-h-screen bg-white p-6 max-w-full overflow-x-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">NIFTY Monthly Returns Heatmap</h1>
         <p className="text-gray-600 mt-1">Monthly percentage returns of NIFTY index over time</p>
@@ -155,17 +152,17 @@ const NiftyHeatmap = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto border rounded-lg">
+      <div className="overflow-x-auto border rounded-lg shadow">
         <table className="w-full border-collapse bg-white text-sm">
           <thead>
             <tr>
-              <th className="border-b p-2 bg-gray-50 text-left font-medium text-gray-700 sticky left-0">Year</th>
+              <th className="border-b p-2 bg-gray-50 text-left font-medium text-gray-700 sticky left-0 z-10">Year</th>
               {MONTHS.map(month => (
-                <th key={month} className="border-b p-2 bg-gray-50 font-medium text-gray-700 text-center">
+                <th key={month} className="border-b p-2 bg-gray-50 font-medium text-gray-700 text-center min-w-[80px]">
                   {month}
                 </th>
               ))}
-              <th className="border-b p-2 bg-gray-100 font-medium text-gray-700 text-center">
+              <th className="border-b p-2 bg-gray-100 font-medium text-gray-700 text-center min-w-[100px]">
                 Year Total
               </th>
             </tr>
@@ -173,7 +170,7 @@ const NiftyHeatmap = () => {
           <tbody>
             {filteredYears.map(year => (
               <tr key={year}>
-                <td className="border-b p-2 font-medium text-gray-700 sticky left-0 bg-white">{year}</td>
+                <td className="border-b p-2 font-medium text-gray-700 sticky left-0 bg-white z-10">{year}</td>
                 {MONTHS.map(month => {
                   const value = data[year]?.[month];
                   return (
@@ -212,7 +209,7 @@ const NiftyHeatmap = () => {
           </div>
         </div>
       )}
-    </Card>
+    </div>
   );
 };
 
