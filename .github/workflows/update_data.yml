@@ -67,6 +67,10 @@ jobs:
         env:
           CI: false # Prevents treating warnings as errors
 
+      # Create CNAME file for custom domain
+      - name: Create CNAME file
+        run: echo "niftygold.in" > dist/CNAME
+
       # Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
@@ -77,6 +81,7 @@ jobs:
           publish_branch: gh-pages
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
+          cname: niftygold.in  # Added this line for custom domain
           commit_message: |
             Deploy: ${{ github.event.head_commit.message }}
             

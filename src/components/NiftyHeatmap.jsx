@@ -16,8 +16,7 @@ const App = () => {
     const fetchData = async () => {
       try {
         setDebugInfo(prev => prev + '\nAttempting to fetch data...');
-        const basePath = import.meta.env.BASE_URL || '/';
-        const response = await fetch(`${basePath}data/nifty_returns.json`);
+        const response = await fetch(`data/nifty_returns.json`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

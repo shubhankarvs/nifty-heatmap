@@ -4,7 +4,8 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/nifty-heatmap/',
+  // Since you're using a custom domain, we can use root path
+  base: '/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -19,7 +20,7 @@ export default defineConfig({
           vendor: ['react', 'react-dom'],
           recharts: ['recharts'],
         },
-        entryFileNames: 'assets/[name].[hash].js',
+        entryFileNumbers: 'assets/[name].[hash].js',
         chunkFileNames: 'assets/[name].[hash].js',
         assetFileNames: 'assets/[name].[hash][extname]'
       }
