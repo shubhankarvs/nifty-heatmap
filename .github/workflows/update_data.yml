@@ -60,8 +60,6 @@ jobs:
       - name: Install dependencies
         run: |
           npm ci
-          npm install -D terser
-          npm install tailwindcss-animate @tailwindcss/typography class-variance-authority clsx tailwind-merge lucide-react
 
       # Build the project
       - name: Build
